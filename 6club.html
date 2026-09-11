@@ -181,6 +181,13 @@ td{
     font-weight:bold;
 }
 
+/* Period number last digit highlight */
+.period-last-digit{
+    color:#f472b6;
+    font-weight:900;
+    text-shadow:0 0 8px rgba(244,114,182,.55);
+}
+
 .empty{
     padding:30px;
     color:#64748b;
@@ -204,6 +211,24 @@ td{
         font-size:35px;
     }
 }
+
+.fire-card{
+    margin-bottom:20px;
+    background:linear-gradient(135deg,#111827,#1f2937);
+    border:1px solid #334155;
+    border-radius:16px;
+    padding:18px;
+    text-align:center;
+    box-shadow:0 0 18px rgba(249,115,22,.12);
+}
+.fire-title{font-size:18px;font-weight:bold;margin-bottom:10px;}
+.fire-levels{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.fire-level{font-size:32px;opacity:.22;filter:grayscale(1);transition:.25s;}
+.fire-level.active{opacity:1;filter:none;text-shadow:0 0 12px rgba(249,115,22,.8);}
+.fire-status{margin-top:8px;color:#fbbf24;font-size:13px;font-weight:bold;}
+.period-main{color:#fff;}
+.period-last-digit{color:#fb7185;font-weight:900;text-shadow:0 0 8px rgba(251,113,133,.55);}
+
 </style>
 </head>
 
@@ -235,6 +260,15 @@ td{
 
     </div>
 
+
+
+    <div class="fire-card">
+        <div class="fire-title">🔥 Maintain 5 Level Fire 🔥</div>
+        <div class="fire-levels" id="fireLevels">
+            <span class="fire-level">🔥</span><span class="fire-level">🔥</span><span class="fire-level">🔥</span><span class="fire-level">🔥</span><span class="fire-level">🔥</span>
+        </div>
+        <div class="fire-status" id="fireStatus">Level 0 / 5</div>
+    </div>
 
     <!-- STATS -->
 
@@ -661,6 +695,45 @@ function syncPeriods() {
 
 
 /* =========================================
+   FORMAT PERIOD
+========================================= */
+
+function formatPeriod(period) {
+
+    const text = String(period ?? "---");
+
+    if (text === "---" || text.length === 0) {
+        return text;
+    }
+
+    const firstPart = text.slice(0, -1);
+    const lastDigit = text.slice(-1);
+
+    return `${firstPart}<span class="period-last-digit">${lastDigit}</span>`;
+}
+
+
+/* =========================================
+   PERIOD DISPLAY / LAST DIGIT COLOR
+========================================= */
+function formatPeriod(period){
+    const value = String(period ?? "---");
+    if(value.length <= 1 || value === "---") return value;
+    return `<span class="period-main">${value.slice(0,-1)}</span><span class="period-last-digit">${value.slice(-1)}</span>`;
+}
+
+/* =========================================
+   5 LEVEL FIRE
+========================================= */
+function updateFireLevel(){
+    const levels = document.querySelectorAll("#fireLevels .fire-level");
+    const count = Math.min(5, Math.max(0, history.length));
+    levels.forEach((el,index)=>el.classList.toggle("active", index < count));
+    const status = document.getElementById("fireStatus");
+    if(status) status.textContent = `Level ${count} / 5${count === 5 ? " — 🔥 MAX FIRE" : ""}`;
+}
+
+/* =========================================
    UPDATE LATEST
 ========================================= */
 
@@ -668,8 +741,8 @@ function updateLatest(data) {
 
     document.getElementById(
         "latestPeriod"
-    ).textContent =
-        data.period;
+    ).innerHTML =
+        formatPeriod(data.period);
 
 
     document.getElementById(
@@ -770,7 +843,7 @@ function renderHistory() {
         row.innerHTML = `
 
             <td>
-                ${period}
+                ${formatPeriod(period)}
             </td>
 
             <td>
@@ -844,9 +917,11 @@ function updateStats() {
 
     document.getElementById(
         "currentPeriod"
-    ).textContent =
-        getPeriodAt(
-            Date.now()
+    ).innerHTML =
+        formatPeriod(
+            getPeriodAt(
+                Date.now()
+            )
         );
 
 }
@@ -861,6 +936,7 @@ function renderAll() {
     renderHistory();
 
     updateStats();
+    updateFireLevel();
 
 
     if (history.length > 0) {
